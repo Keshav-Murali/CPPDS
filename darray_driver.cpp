@@ -8,9 +8,12 @@ int main(void)
 	size_t i;
         darray<double> d;
 	
-	for(i = 0; i < 32; i++) {
+	for(i = 0; i < 33; i++) {
 		d.push_back(i);
 	}
+	
+	cout << "darray size: " << d.size() << "\n";
+	cout << "darray capacity: " << d.capacity() << "\n";
 	
 	cout << "Last 5 elements\n";
 	for(i = 0; i < 5; i++) {
@@ -18,8 +21,11 @@ int main(void)
 		d.pop_back();
 	}
 	
+	cout << "\ndarray size: " << d.size() << "\n";
+	cout << "darray capacity: " << d.capacity() << "\n";
+	
 	cout << "\nRemaining elements\n";
-	for(i = 0; i < 27; i++) {
+	for(i = 0; i < 28; i++) {
 		cout << d.at(i) << " ";
 	}
 	

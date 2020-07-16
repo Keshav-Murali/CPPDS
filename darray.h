@@ -31,17 +31,20 @@ As you can see, I am avoiding having to cast to FP and floor or cast again
 template <class T>
 class darray {
 	private:
-		std::size_t max_size;
-		std::size_t size;
+		std::size_t capacity_v;
+		std::size_t size_v;
 		T* data;
 		
 		bool in_range(std::size_t index);
-		bool is_empty(); 
 		void auto_reallocate();
 	public:
 		darray();
 		~darray();
 		
+		std::size_t size();
+		std::size_t capacity();
+		
+		bool empty(); 
 		T& at(std::size_t index);
 		T& front();
 		T& back();
@@ -52,7 +55,7 @@ class darray {
 		const T& back() const;
 	*/ // Above TBD later - also for operator[]
 	
-		void push_back(T element);
+		void push_back(const T& element);
 		void pop_back();
 };
 
@@ -60,7 +63,7 @@ class darray {
 template <class T>
 bool darray<T>::in_range(std::size_t index) 
 {
-	if (this->size <= index) {
+	if (this->size_v <= index) {
 		return false;
 	}
 
@@ -68,23 +71,13 @@ bool darray<T>::in_range(std::size_t index)
 }
 
 template <class T>
-bool darray<T>::is_empty() 
-{
-	if (this->size == 0) {
-		return true;
-	}
-
-	return false;
-}
-
-template <class T>
 void darray<T>::auto_reallocate() 
 {
 	try {
-		std::size_t new_size = (((this->max_size * NUMERATOR) / DENOMINATOR) + EXTRA);
+		std::size_t new_size = (((this->capacity_v * NUMERATOR) / DENOMINATOR) + EXTRA);
 		
 		/* std::size_t is unsigned - overflow is likely to create a smaller value */
-		if (new_size < this->max_size) {
+		if (new_size < this->capacity_v) {
 			throw TOO_BIG;
 		}
 		
@@ -96,7 +89,7 @@ void darray<T>::auto_reallocate()
 		}
 		
 		this->data = temp;
-		this->max_size = new_size;
+		this->capacity_v = new_size;
 	}
 	catch(const char* msg) {
 		std::cerr << msg;
@@ -114,8 +107,8 @@ darray<T>::darray()
 			throw MALLOC_FAIL;
 		}
 
-		this->size = 0;
-		this->max_size = MINIMUM_SIZE;
+		this->size_v = 0;
+		this->capacity_v = MINIMUM_SIZE;
 
 	}
         catch(const char* msg) {
@@ -131,6 +124,28 @@ darray<T>::~darray()
 }
 
 // Public member functions
+template <class T>
+std::size_t darray<T>::size()
+{
+	return size_v;
+}
+
+template <class T>
+std::size_t darray<T>::capacity()
+{
+	return capacity_v;
+}
+
+template <class T>
+bool darray<T>::empty() 
+{
+	if (this->size_v == 0) {
+		return true;
+	}
+
+	return false;
+}
+
 template <class T>
 T& darray<T>::at(std::size_t index) 
 {
@@ -152,7 +167,7 @@ template <class T>
 T& darray<T>::front()
 {
 	try {
-		if (is_empty()) {
+		if (empty()) {
 			throw ARR_EMPTY;
 		}
 		
@@ -168,11 +183,11 @@ template <class T>
 T& darray<T>::back()
 {
 	try {
-		if (is_empty()) {
+		if (empty()) {
 			throw ARR_EMPTY;
 		}
 		
-		return at(this->size - 1);
+		return at(this->size_v - 1);
 	}
 	catch(const char* msg) {
 		std::cerr << msg;
@@ -188,25 +203,25 @@ T& darray<T>::operator[](std::size_t index)
 }
 
 template <class T>
-void darray<T>::push_back(T element)
+void darray<T>::push_back(const T& element)
 {
-	if (this->size >= this->max_size) {
+	if (this->size_v >= this->capacity_v) {
 		auto_reallocate();
 	}
         
-	this->data[this->size] = element;
-	this->size++;
+	this->data[this->size_v] = element;
+	this->size_v++;
 }
 
 template <class T>
 void darray<T>::pop_back()
 {
 	try {
-		if (is_empty()) {
+		if (empty()) {
 			throw ARR_EMPTY;
 		}
 		
-		this->size--;
+		this->size_v--;
 	}
 	catch(const char* msg) {
 		std::cerr << msg;

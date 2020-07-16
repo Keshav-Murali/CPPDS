@@ -8,7 +8,13 @@ To learn C++ and also revise my knowledge of data structures
 Yes
 
 ## What am I doing now?
-I'm going to start with vectors
+Vectors and Stack
+
+## Known issues
+max_size is platform specific and idk what to do with it
+I don't know what emplace does yet, so none of that for now
+I am also wondering about const
+I'll implement swaps soon
 
 ## Finished
 Nothing so far
