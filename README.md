@@ -11,10 +11,10 @@ Yes
 Vectors and Stack
 
 ## Known issues
-max_size is platform specific and idk what to do with it
-I don't know what emplace does yet, so none of that for now
-I am also wondering about const
-I'll implement swaps soon
+max_size is platform specific and idk what to do with it  
+I don't know what emplace does yet, so none of that for now  
+I am also wondering about const  
+I'll implement swaps soon  
 
 ## Finished
 Nothing so far
