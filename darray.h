@@ -1,18 +1,17 @@
-/*
-There is a design choice 
-1) use void* and let the user write functions that cast to the correct type
-for any computation and pass sizeof(type) to us
+#include <iostream>
+// I am going to use malloc, realloc and free for only the internal array 
+#include <cstdlib>
+#include <exception>
 
-2) use macros and let the user define the type in their source
+// This value is used when constructing the dynamic array
+#define MINIMUM_SIZE 8
 
-This uses the latter.
-Any program MUST define DARRAY_TYPE before including darray.h!
-*/
-
-/*
-This value is used when constructing the dynamic array
-*/
-#define MINIMUM_SIZE 16
+// Exception messages
+#define MALLOC_FAIL "Error: Could not allocate memory for the array!"
+#define REALLOC_FAIL "Error: Could not expand the array!"
+#define NOT_IN_RANGE "Error: Illegal Index accessed!"
+#define TOO_BIG "Error: If resized, array will be too big to be addressed!"
+#define ARR_EMPTY "Error: Array does not have any elements!"
 
 /*
 The array will be resized as
@@ -29,34 +28,166 @@ As you can see, I am avoiding having to cast to FP and floor or cast again
 #define DENOMINATOR 1
 #define EXTRA 0
 
-/* 
-Properties/Variables are in darray
-Public methods are in darray_func (in the form of function ptrs)
+template <class T>
+class darray {
+	private:
+		size_t max_size;
+		size_t size;
+		T* data;
+		
+		bool in_range(size_t index);
+		bool is_empty(); 
+		void auto_reallocate();
+	public:
+		darray();
+		~darray();
+		T at(size_t index);
+		void push_back(T element);
+		void pop_back();
+		T front();
+		T back();
+};
 
-An alternate configuration is to use just one struct, but that wastes memory
-as we declare more objects
-*/
+// Private member functions
+template <class T>
+bool darray<T>::in_range(size_t index) {
+	if (this->size <= index) {
+		return false;
+	}
 
-typedef struct {
-	size_t max_size;
-	size_t size;
-	size_t f_iter;
-	size_t r_iter;
+	return true;
+}
 
-	DARRAY_TYPE* data;
-}darray;
+template <class T>
+bool darray<T>::is_empty() {
+	if (this->size == 0) {
+		return true;
+	}
 
-typedef struct {
-	DARRAY_TYPE (*at) (darray*, size_t);
-	void (*push_back) (darray*, DARRAY_TYPE);
-	void (*pop_back) (darray*);
-	DARRAY_TYPE (*front) (darray*);
-	DARRAY_TYPE (*back) (darray*);
-}darray_func;
+	return false;
+}
 
-/* Initialize the struct with methods */
-extern void init_darray_func(darray_func* f);
+template <class T>
+void darray<T>::auto_reallocate() {
+	try {
+		size_t new_size = (((this->max_size * NUMERATOR) / DENOMINATOR) + EXTRA);
+		
+		/* size_t is unsigned - overflow is likely to create a smaller value */
+		if (new_size < this->max_size) {
+			throw TOO_BIG;
+		}
+		
+		T* temp = (T*) realloc(this->data, new_size * sizeof(T));
+		
+		if (temp == nullptr) {
+			free(this->data);
+			throw REALLOC_FAIL;
+		}
+		
+		this->data = temp;
+		this->max_size = new_size;
+	}
+	catch(const char* msg) {
+		std::cerr << msg;
+		exit(EXIT_FAILURE);
+	}	
+}
 
-/* Constructor and destructor for dynamic array */
-extern darray* new_darray(void);
-extern void destroy_darray(darray* d);
+// Constructor and Destructor
+template <class T>
+darray<T>::darray() {
+	try {
+		this->data = (T*) malloc(sizeof(T) * MINIMUM_SIZE);
+		if (this->data == nullptr) {
+			throw MALLOC_FAIL;
+		}
+
+		this->size = 0;
+		this->max_size = MINIMUM_SIZE;
+
+	}
+        catch(const char* msg) {
+		std::cerr << msg;
+		exit(EXIT_FAILURE);
+	}
+}
+
+template <class T>
+darray<T>::~darray() {
+	free(this->data);
+}
+
+// Public member functions
+template <class T>
+T darray<T>::at(size_t index) {
+	try {
+		if (!in_range(index)) {
+			throw NOT_IN_RANGE;
+		}
+		
+		return (this->data[index]);
+	}
+	catch(const char* msg) {
+		std::cerr << msg;
+		exit(EXIT_FAILURE);
+	}
+}
+
+template <class T>
+void darray<T>::push_back(T element)
+{
+	if (this->size >= this->max_size) {
+		auto_reallocate();
+	}
+        
+	this->data[this->size] = element;
+	this->size++;
+}
+
+template <class T>
+void darray<T>::pop_back()
+{
+	try {
+		if (is_empty()) {
+			throw ARR_EMPTY;
+		}
+		
+		this->size--;
+	}
+	catch(const char* msg) {
+		std::cerr << msg;
+		exit(EXIT_FAILURE);
+	}
+}
+
+template <class T>
+T darray<T>::front()
+{
+	try {
+		if (is_empty()) {
+			throw ARR_EMPTY;
+		}
+		
+		return at(0);
+	}
+	catch(const char* msg) {
+		std::cerr << msg;
+		exit(EXIT_FAILURE);
+	}
+}
+
+template <class T>
+T darray<T>::back()
+{
+	try {
+		if (is_empty()) {
+			throw ARR_EMPTY;
+		}
+		
+		return at(this->size - 1);
+	}
+	catch(const char* msg) {
+		std::cerr << msg;
+		exit(EXIT_FAILURE);
+	}
+}
