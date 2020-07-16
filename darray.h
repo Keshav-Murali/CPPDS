@@ -31,26 +31,35 @@ As you can see, I am avoiding having to cast to FP and floor or cast again
 template <class T>
 class darray {
 	private:
-		size_t max_size;
-		size_t size;
+		std::size_t max_size;
+		std::size_t size;
 		T* data;
 		
-		bool in_range(size_t index);
+		bool in_range(std::size_t index);
 		bool is_empty(); 
 		void auto_reallocate();
 	public:
 		darray();
 		~darray();
-		T at(size_t index);
+		
+		T& at(std::size_t index);
+		T& front();
+		T& back();
+		T& operator[](std::size_t index);
+		
+	/*	const T& at(std::size_t index) const;
+		const T& front() const;
+		const T& back() const;
+	*/ // Above TBD later - also for operator[]
+	
 		void push_back(T element);
 		void pop_back();
-		T front();
-		T back();
 };
 
 // Private member functions
 template <class T>
-bool darray<T>::in_range(size_t index) {
+bool darray<T>::in_range(std::size_t index) 
+{
 	if (this->size <= index) {
 		return false;
 	}
@@ -59,7 +68,8 @@ bool darray<T>::in_range(size_t index) {
 }
 
 template <class T>
-bool darray<T>::is_empty() {
+bool darray<T>::is_empty() 
+{
 	if (this->size == 0) {
 		return true;
 	}
@@ -68,11 +78,12 @@ bool darray<T>::is_empty() {
 }
 
 template <class T>
-void darray<T>::auto_reallocate() {
+void darray<T>::auto_reallocate() 
+{
 	try {
-		size_t new_size = (((this->max_size * NUMERATOR) / DENOMINATOR) + EXTRA);
+		std::size_t new_size = (((this->max_size * NUMERATOR) / DENOMINATOR) + EXTRA);
 		
-		/* size_t is unsigned - overflow is likely to create a smaller value */
+		/* std::size_t is unsigned - overflow is likely to create a smaller value */
 		if (new_size < this->max_size) {
 			throw TOO_BIG;
 		}
@@ -95,7 +106,8 @@ void darray<T>::auto_reallocate() {
 
 // Constructor and Destructor
 template <class T>
-darray<T>::darray() {
+darray<T>::darray() 
+{
 	try {
 		this->data = (T*) malloc(sizeof(T) * MINIMUM_SIZE);
 		if (this->data == nullptr) {
@@ -113,13 +125,15 @@ darray<T>::darray() {
 }
 
 template <class T>
-darray<T>::~darray() {
+darray<T>::~darray() 
+{
 	free(this->data);
 }
 
 // Public member functions
 template <class T>
-T darray<T>::at(size_t index) {
+T& darray<T>::at(std::size_t index) 
+{
 	try {
 		if (!in_range(index)) {
 			throw NOT_IN_RANGE;
@@ -131,6 +145,46 @@ T darray<T>::at(size_t index) {
 		std::cerr << msg;
 		exit(EXIT_FAILURE);
 	}
+}
+
+/* Behaviour of front() and back() is undefined on empty containers */
+template <class T>
+T& darray<T>::front()
+{
+	try {
+		if (is_empty()) {
+			throw ARR_EMPTY;
+		}
+		
+		return at(0);
+	}
+	catch(const char* msg) {
+		std::cerr << msg;
+		exit(EXIT_FAILURE);
+	}
+}
+
+template <class T>
+T& darray<T>::back()
+{
+	try {
+		if (is_empty()) {
+			throw ARR_EMPTY;
+		}
+		
+		return at(this->size - 1);
+	}
+	catch(const char* msg) {
+		std::cerr << msg;
+		exit(EXIT_FAILURE);
+	}
+}
+
+/* Cannot reuse at() since this must NOT perform bounds checking */
+template <class T>
+T& darray<T>::operator[](std::size_t index)
+{
+	return this->data[index];
 }
 
 template <class T>
@@ -153,38 +207,6 @@ void darray<T>::pop_back()
 		}
 		
 		this->size--;
-	}
-	catch(const char* msg) {
-		std::cerr << msg;
-		exit(EXIT_FAILURE);
-	}
-}
-
-template <class T>
-T darray<T>::front()
-{
-	try {
-		if (is_empty()) {
-			throw ARR_EMPTY;
-		}
-		
-		return at(0);
-	}
-	catch(const char* msg) {
-		std::cerr << msg;
-		exit(EXIT_FAILURE);
-	}
-}
-
-template <class T>
-T darray<T>::back()
-{
-	try {
-		if (is_empty()) {
-			throw ARR_EMPTY;
-		}
-		
-		return at(this->size - 1);
 	}
 	catch(const char* msg) {
 		std::cerr << msg;

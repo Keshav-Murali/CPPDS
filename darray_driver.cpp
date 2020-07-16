@@ -23,5 +23,9 @@ int main(void)
 		cout << d.at(i) << " ";
 	}
 	
+	cout << "\nThis time using the overloaded operator\n";
+	for(i = 0; i < 27; i++) {
+		cout << d[i] << " ";
+	}
 	return 0;
 }
